@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace Assets.Misc
 {
     public class Utils
@@ -44,6 +46,18 @@ namespace Assets.Misc
         public Vector3 YawPitchToVector(float yaw, float pitch)
         {
             return new Vector3(Mathf.Cos(yaw) * Mathf.Cos(pitch), Mathf.Sin(yaw) * Mathf.Cos(pitch),Mathf.Sin(pitch));
+        }
+
+        public delegate void WaitForSecondsThenCallback();
+        public void WaitForSecondsThen(MonoBehaviour mono, float time,WaitForSecondsThenCallback callback)
+        {
+            mono.StartCoroutine(waitForSecondsThen(time,callback));
+        }
+        private IEnumerator waitForSecondsThen(float time, WaitForSecondsThenCallback callback)
+        {
+            yield return new WaitForSeconds(time);
+            if(callback!=null)
+                callback();
         }
     }
 

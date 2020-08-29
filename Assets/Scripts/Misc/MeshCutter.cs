@@ -190,29 +190,25 @@ namespace BLINDED_AM_ME
             GameObject leftSideObj = victim;
 
             /*Debug code...*/
-            if (!hasVerticesLeft)
+            if (hasVerticesLeft)
             {
-                //var o = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                //o.transform.parent = leftSideObj.transform;
-                //o.transform.position = new Vector3(0, 0, 0);
+                leftSideObj.GetComponent<MeshRenderer>().materials = mats;
+            }
+            else
+            {
+                GameObject.Destroy(victim);
                 leftSideObj = null;
             }
             /*End of Debug code...*/
 
-            GameObject rightSideObj = new GameObject("right side", typeof(MeshFilter), typeof(MeshRenderer));
-            rightSideObj.transform.position = victim.transform.position;
-            rightSideObj.transform.rotation = victim.transform.rotation;
-            rightSideObj.GetComponent<MeshFilter>().mesh = right_HalfMesh;
+            GameObject rightSideObj = null;
 
-            if (!hasVerticesRight)
+            if (hasVerticesRight)
             {
-                //var o = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                //o.transform.parent = rightSideObj.transform;
-                //o.transform.position = new Vector3(0,0,0);
-                rightSideObj = null;
-            }
-            else
-            {
+                rightSideObj = new GameObject("right side", typeof(MeshFilter), typeof(MeshRenderer));
+                rightSideObj.transform.position = victim.transform.position;
+                rightSideObj.transform.rotation = victim.transform.rotation;
+                rightSideObj.GetComponent<MeshFilter>().mesh = right_HalfMesh;
 
                 if (victim.transform.parent != null)
                 {
@@ -220,12 +216,9 @@ namespace BLINDED_AM_ME
                 }
 
                 rightSideObj.transform.localScale = victim.transform.localScale;
+                rightSideObj.GetComponent<MeshRenderer>().materials = mats;
             }
             // assign mats
-            if(leftSideObj!=null)
-                leftSideObj.GetComponent<MeshRenderer>().materials = mats;
-            if(rightSideObj!=null)
-                rightSideObj.GetComponent<MeshRenderer>().materials = mats;
 
             return new GameObject[] { leftSideObj, rightSideObj };
 

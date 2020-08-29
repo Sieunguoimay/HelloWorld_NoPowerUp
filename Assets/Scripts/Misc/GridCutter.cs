@@ -12,14 +12,14 @@ public class GridCutter/*: MonoBehaviour*/
     //{
     //}
 
-    public static GameObject[] Cut(GameObject victim,Material innerMaterial,int gridNumberInEachDimension, out int nullCounter)
+    public static List<GameObject> Cut(GameObject victim,Material innerMaterial,int gridNumberInEachDimension)
     {
         Vector3 pos = victim.GetComponent<MeshRenderer>().bounds.center;// victim.transform.position;
         int n = gridNumberInEachDimension;
         Vector3 size = victim.GetComponent<MeshRenderer>().bounds.size;
 
-        GameObject[] allPieces = new GameObject[n* n* n];
-        nullCounter = 0;
+        //GameObject[] allPieces = new GameObject[n* n* n];
+        List<GameObject> allPieces = new List<GameObject>();
         for (int i = 0; i < n - 1; i++)
         {
             float cuttingYoffset = ((float)((float)(n-2) / 2.0f - (float)i) / (float)n);
@@ -57,25 +57,142 @@ public class GridCutter/*: MonoBehaviour*/
                             Vector3 right = new Vector3(1, 0, 0);
 
                             GameObject[] pieces3 = MeshCutter.Cut(pieces2[1], cuttingPos3, right, innerMaterial);
-                            //allPieces.Add(pieces3[1]);
-                            if (pieces2[1] != null)
+                            if (pieces3[1] != null)
                             {
-                                allPieces[i * n * n + j * n + k - nullCounter] = pieces3[1];
-                                Debug.Log("y: " + (i * n * n + j * n + k - nullCounter));
+                                //allPieces[i * n * n + j * n + k - nullCounter] = pieces3[1];
+                                //Debug.Log("y: " + (i * n * n + j * n + k - nullCounter));
+                                _ = pieces3[1].name;
+                                allPieces.Add(pieces3[1]);
                             }
                             else
                             {
-                                nullCounter++;
+                                //nullCounter++;
+                            }
+                            if(pieces2[1] == null)
+                            {
+                                //nullCounter++;
+
+                                break;
                             }
                         }
-                        allPieces[i * n * n + j * n + n - 1 - nullCounter] = pieces2[1];
-                        Debug.Log("z: " + (i * n * n + j * n + n - 1 - nullCounter));
+                        if (pieces2[1] != null)
+                        {
+                            _ = pieces2[1].name;
+                            allPieces.Add(pieces2[1]);
+                        }
+                        //    allPieces[i * n * n + j * n + n - 1 - nullCounter] = pieces2[1];
+                        //Debug.Log("z: " + (i * n * n + j * n + n - 1 - nullCounter));
                     }
                     else
                     {
-                        nullCounter += n;
+                        //nullCounter += n;
+                    }
+                    if (pieces[1] == null)
+                    {
+                        break;
                     }
                 }
+                if (pieces[1] != null)
+                {
+                    for (int k = 0; k < n - 1; k++)
+                    {
+                        float cuttingXOffset = ((float)((float)(n - 2) / 2.0f - (float)k) / (float)n);
+                        float sx = size.x;
+                        Vector3 cuttingPos3 = pos + new Vector3(cuttingXOffset * sx, 0, 0);
+                        Vector3 right = new Vector3(1, 0, 0);
+
+                        GameObject[] pieces3 = MeshCutter.Cut(pieces[1], cuttingPos3, right, innerMaterial);
+                        if (pieces3[1] != null)
+                        {
+                            //allPieces[i * n * n + (n - 1) * n + k - nullCounter] = pieces3[1];
+                            //Debug.Log("y: " + (i * n * n + (n - 1) * n + k - nullCounter));
+                            _ = pieces3[1].name;
+                            allPieces.Add(pieces3[1]);
+                        }
+                        else
+                        {
+                            //nullCounter++;
+                        }
+                        if (pieces[1] == null)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (pieces[1] != null)
+                    {
+                        _ = pieces[1].name;
+                        allPieces.Add(pieces[1]);
+                    }
+                    //allPieces[i * n * n + (n - 1) * n + n - 1 - nullCounter] = pieces[1];
+                    //Debug.Log("x: " + (i * n * n + (n - 1) * n + n - 1 - nullCounter));
+                }
+
+            }
+            else
+            {
+                //nullCounter+=n*n;
+            }
+            if (victim == null)
+            {
+                break;
+            }
+        }
+        if (victim != null)
+        {
+            for (int j = 0; j < n - 1; j++)
+            {
+                float cuttingZOffset = ((float)((float)(n - 2) / 2.0f - (float)j) / (float)n);
+                float sz = size.z;
+                Vector3 cuttingPos2 = pos + new Vector3(0, 0, cuttingZOffset * sz);
+                Vector3 normal = new Vector3(0, 0, 1);
+
+                GameObject[] pieces2 = MeshCutter.Cut(victim, cuttingPos2, normal, innerMaterial);
+                if (pieces2[1] != null)
+                {
+                    for (int k = 0; k < n - 1; k++)
+                    {
+                        float cuttingXOffset = ((float)((float)(n - 2) / 2.0f - (float)k) / (float)n);
+                        float sx = size.x;
+                        Vector3 cuttingPos3 = pos + new Vector3(cuttingXOffset * sx, 0, 0);
+                        Vector3 right = new Vector3(1, 0, 0);
+
+                        GameObject[] pieces3 = MeshCutter.Cut(pieces2[1], cuttingPos3, right, innerMaterial);
+                        if (pieces3[1] != null)
+                        {
+                            //allPieces[(n - 1) * n * n + j * n + k - nullCounter] = pieces3[1];
+                            //Debug.Log("y: " + ((n - 1) * n * n + j * n + k - nullCounter));
+                            _ = pieces3[1].name;
+                            allPieces.Add(pieces3[1]);
+                        }
+                        else
+                        {
+                            //nullCounter++;
+                        }
+                        if (pieces2[1] == null)
+                        {
+                            break;
+                        }
+                    }
+                    if (pieces2[1] != null)
+                    {
+                        _ = pieces2[1].name;
+                        allPieces.Add(pieces2[1]);
+                    }
+                    //allPieces[(n - 1) * n * n + j * n + n - 1 - nullCounter] = pieces2[1];
+                    //Debug.Log("z: " + ((n - 1) * n * n + j * n + n - 1 - nullCounter));
+                }
+                else
+                {
+                    //nullCounter += n;
+                }
+                if(victim == null)
+                {
+                    break;
+                }
+            }
+            if (victim != null)
+            {
                 for (int k = 0; k < n - 1; k++)
                 {
                     float cuttingXOffset = ((float)((float)(n - 2) / 2.0f - (float)k) / (float)n);
@@ -83,88 +200,37 @@ public class GridCutter/*: MonoBehaviour*/
                     Vector3 cuttingPos3 = pos + new Vector3(cuttingXOffset * sx, 0, 0);
                     Vector3 right = new Vector3(1, 0, 0);
 
-                    GameObject[] pieces3 = MeshCutter.Cut(pieces[1], cuttingPos3, right, innerMaterial);
+                    GameObject[] pieces3 = MeshCutter.Cut(victim, cuttingPos3, right, innerMaterial);
                     if (pieces3[1] != null)
                     {
-                        allPieces[i * n * n + (n - 1) * n + k - nullCounter] = pieces3[1];
-                        //allPieces.Add(pieces3[1]);
-                        Debug.Log("y: " + (i * n * n + (n - 1) * n + k - nullCounter));
+                        //allPieces[(n - 1) * n * n + (n - 1) * n + k - nullCounter] = pieces3[1];
+                        ////allPieces.Add(pieces3[1]);
+                        //Debug.Log("y: " + ((n - 1) * n * n + (n - 1) * n + k - nullCounter));
+                        _ = pieces3[1].name;
+                        allPieces.Add(pieces3[1]);
                     }
                     else
                     {
-                        nullCounter++;
+                        //nullCounter++;
+                    }
+                    if (victim == null)
+                    {
+                        break;
                     }
                 }
-                allPieces[i * n * n + (n - 1) * n + n - 1 - nullCounter] = pieces[1];
-                Debug.Log("x: " + (i * n * n + (n - 1) * n + n - 1 - nullCounter));
-            }
-            else
-            {
-                nullCounter+=n*n;
-            }
-        }
 
-        for (int j = 0; j < n - 1; j++)
-        {
-            float cuttingZOffset = ((float)((float)(n - 2) / 2.0f - (float)j) / (float)n);
-            float sz = size.z;
-            Vector3 cuttingPos2 = pos + new Vector3(0, 0, cuttingZOffset * sz);
-            Vector3 normal = new Vector3(0, 0, 1);
-
-            GameObject[] pieces2 = MeshCutter.Cut(victim, cuttingPos2, normal, innerMaterial);
-            if (pieces2[1] != null)
-            {
-                for (int k = 0; k < n - 1; k++)
+                if (victim != null)
                 {
-                    float cuttingXOffset = ((float)((float)(n - 2) / 2.0f - (float)k) / (float)n);
-                    float sx = size.x;
-                    Vector3 cuttingPos3 = pos + new Vector3(cuttingXOffset * sx, 0, 0);
-                    Vector3 right = new Vector3(1, 0, 0);
-
-                    GameObject[] pieces3 = MeshCutter.Cut(pieces2[1], cuttingPos3, right, innerMaterial);
-                    if (pieces3[1]!=null)
-                    {
-                        allPieces[(n - 1) * n * n + j * n + k - nullCounter] = pieces3[1];
-                        Debug.Log("y: " + ((n - 1) * n * n + j * n + k - nullCounter));
-                    }
-                    else
-                    {
-                        nullCounter++;
-                    }
+                    _ = victim.name;
+                    allPieces.Add(victim);
                 }
-
-                allPieces[(n - 1) * n * n + j * n + n - 1 - nullCounter] = pieces2[1];
-                Debug.Log("z: " + ((n - 1) * n * n + j * n + n - 1 - nullCounter));
-            }
-            else
-            {
-                nullCounter+=n;
+                //allPieces[(n - 1) * n * n + (n - 1) * n + n - 1 - nullCounter] = victim;
+                //Debug.Log("z: " + ((n - 1) * n * n + (n - 1) * n + n - 1 - nullCounter));
             }
         }
 
-        for (int k = 0; k < n - 1; k++)
-        {
-            float cuttingXOffset = ((float)((float)(n - 2) / 2.0f - (float)k) / (float)n);
-            float sx = size.x;
-            Vector3 cuttingPos3 = pos + new Vector3(cuttingXOffset * sx, 0, 0);
-            Vector3 right = new Vector3(1, 0, 0);
 
-            GameObject[] pieces3 = MeshCutter.Cut(victim, cuttingPos3, right, innerMaterial);
-            if (pieces3[1] != null)
-            {
-                allPieces[(n - 1) * n * n + (n - 1) * n + k - nullCounter] = pieces3[1];
-                //allPieces.Add(pieces3[1]);
-                Debug.Log("y: " + ((n - 1) * n * n + (n - 1) * n + k - nullCounter));
-            }
-            else
-            {
-                nullCounter++;
-            }
-        }
-
-        allPieces[(n - 1)*n*n +  (n-1)*n + n-1 - nullCounter] = victim;
-        Debug.Log("z: " + ((n - 1) * n * n + (n - 1) * n + n - 1 - nullCounter));
-        //allPieces.Add(victim);
+            //allPieces.Add(victim);
         return allPieces;
     }
     //// Update is called once per frame

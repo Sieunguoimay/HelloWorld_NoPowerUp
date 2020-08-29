@@ -8,7 +8,8 @@ using Assets.Misc;
 public class Main : MonoBehaviour
 {
     public GameObject canvas;
-    
+
+    public GameObject IslandModel;
     public GameObject cuttingTarget;
     public Material innerMaterial;
     Bounds bounds;
@@ -16,7 +17,7 @@ public class Main : MonoBehaviour
     public float per;
     public float percentage { set {
             per = value;
-            if(onPercentageChanged!=null)
+            if (onPercentageChanged != null)
                 onPercentageChanged(value);
         }
         get { return per; }
@@ -26,10 +27,10 @@ public class Main : MonoBehaviour
     public Slider UiPercentageSlider;
 
     public delegate void OnPercentageChanged(float value);
-    public OnPercentageChanged onPercentageChanged  =null;
+    public OnPercentageChanged onPercentageChanged = null;
+    private int upperBoundIndexToDisplay = 0;
 
-    private GameObject[] _blocks;
-    private int nullBlockCounter = 0;
+    private List<GameObject> _blocks = null;
 
     private int vectorFieldSize = 10;
     private Vector3[] vectorField = null;
@@ -42,69 +43,120 @@ public class Main : MonoBehaviour
 
 
     private float deltaTime;
-    public Text UiFps;
+    public GameObject UiBlockControlPanel;
+    public Text UiFpsText;
+    public Text UiLogText;
+
+    public GameObject UiInputPanel;
+    public InputField UiGridSizeInputField;
+
+    public GameObject IslandDecoration;
+
+    public GameObject DustParticleSystem;
+    public GameObject DustParticleSystem2;
+    public GameObject ShinyParticleSystem;
+    public GameObject BigDustParticleSystem;
     // Start is called before the first frame update
     void Start()
     {
+        UiInputPanel.SetActive(true);
+        UiBlockControlPanel.SetActive(false);
+
         canvas.SetActive(true);
 
         bounds = cuttingTarget.GetComponent<MeshRenderer>().bounds;
 
-        _blocks = GridCutter.Cut(cuttingTarget, innerMaterial, 10, out int nullBlockCounter);
-        this.nullBlockCounter = nullBlockCounter;
-        Debug.Log("_blocks.Length - nullBlockCounter: " + (_blocks.Length - nullBlockCounter));
+
         //UiPercentageInputField.onEndEdit.AddListener((text) => { float.TryParse(text, out float p); percentage = Mathf.Min(p,100.0f); });
         UiPercentageSlider.onValueChanged.AddListener((value) => { percentage = value * 100f; });
         onPercentageChanged = (value) =>
         {
-            int upperBoundIndex = (int)((1.0f - value / 100.0f) * (float)(_blocks.Length - nullBlockCounter));
-            ShowBlocks(upperBoundIndex);
+            upperBoundIndexToDisplay = (int)((1.0f - value / 100.0f) * (float)(_blocks.Count));
+            ShowBlocks(upperBoundIndexToDisplay);
         };
 
-        upperBoundIndexToDisplay = _blocks.Length - nullBlockCounter;
+        upperBoundIndexToDisplay = 0;// _blocks.Count;
 
-        boundPos = new Vector3(0, 3.5f, 0);
-        boundSize = new Vector3(3, 3, 3);
-        vectorFieldSize = 10;
-        vectorField = new Vector3[vectorFieldSize * vectorFieldSize * vectorFieldSize];
-        vectorFieldUi = new GameObject[vectorFieldSize * vectorFieldSize * vectorFieldSize];
-
-        //DisplayBound();
-
-        for (int i = 0; i < 20; i++)
-        {
-
-            Vector3 boidPos = new Vector3(
-                Random.Range(-boundPos.x*0.5f, boundPos.x * 0.5f),
-                Random.Range(-boundPos.y * 0.5f, boundPos.y * 0.5f),
-                Random.Range(-boundPos.z * 0.5f, boundPos.z * 0.5f));
-            Vector3 boidVel = new Vector3(
-                Random.Range(-0.05f, 0.05f),
-                Random.Range(-0.05f, 0.05f),
-                Random.Range(-0.05f, 0.05f));
-            Vector3 boidAcc = new Vector3(
-                Random.Range(-0.01f, 0.01f),
-                Random.Range(-0.01f, 0.01f),
-                Random.Range(-0.01f, 0.01f));
-            Vector3 boidRot = new Vector3(0, 0, 0);
-            Boid newBoid = Instantiate(boidTemplate, boidPos, Quaternion.Euler(boidRot));
-            newBoid.SetUp(boidPos, boidVel, boidVel);
-            newBoid.SetPercepts(boundPos, boundSize);
-            boids.Add(newBoid);
-        }
 
         deltaTime = Time.deltaTime;
     }
+    public void OnGridSizeSubmitted()
+    {
+        int gridSize = int.Parse(UiGridSizeInputField.text);
+        if (gridSize > 0)
+        {
+            _blocks = GridCutter.Cut(cuttingTarget, innerMaterial, gridSize);
+            Debug.Log("The Mesh is Cut with grid of size " + _blocks.Count + " in each dimesion!");
+            UiLogText.text = "Total: " + _blocks.Count;
+            upperBoundIndexToDisplay = 0;
+
+            UiBlockControlPanel.SetActive(true);
+            UiInputPanel.SetActive(false);
+
+
+        }
+        else
+        {
+            Debug.Log("Invalid grid size: " + gridSize);
+        }
+    }
+
+    private bool nullFilterLock = true;
     private void ShowBlocks(int upperBoundIndex)
     {
+        if (_blocks == null) return;
         Debug.Log("upperBoundIndex:" + upperBoundIndex);
-        for (int i = 0; i < _blocks.Length - nullBlockCounter; i++)
+
+
+        if (nullFilterLock)
+        {
+            nullFilterLock = false;
+            for (int i = 0; i < _blocks.Count; i++)
+            {
+                if (_blocks[i] == null)
+                {
+                    _blocks.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+
+        if (upperBoundIndex != 0)
+            IslandDecoration.GetComponent<IslandDecoration>().Hide();
+        else
+        {
+            ShinyParticleSystem.transform.position = IslandModel.transform.position;
+            Vector3 diff = Quaternion.LookRotation(IslandModel.transform.forward) * (new Vector3(0.5f, 0.0f, 1.2f));
+            BigDustParticleSystem.transform.position = IslandModel.transform.position+ new Vector3(diff.x,0.2f,diff.z);
+            IslandDecoration.GetComponent<IslandDecoration>().Show();
+            BigDustParticleSystem.GetComponent<ParticleSystem>().Play();
+            Utils.Instance.WaitForSecondsThen(this, 0.1f,()=>
+                ShinyParticleSystem.GetComponent<ParticleSystem>().Play());
+        }
+
+        for (int i = 0; i < _blocks.Count; i++)
         {
             if (_blocks[i] != null)
             {
-                if (i > upperBoundIndex)
+                if (i >= upperBoundIndex)
                 {
-                    _blocks[i].SetActive(true);
+                    if (!_blocks[i].activeSelf)
+                    {
+                        _blocks[i].SetActive(true);
+                        DustParticleSystem.transform.position = _blocks[i].GetComponent<MeshRenderer>().bounds.center;
+                        if(DustParticleSystem.GetComponent<ParticleSystem>().particleCount==0)
+                            DustParticleSystem.GetComponent<ParticleSystem>().Emit(40);
+                        if (DustParticleSystem2.GetComponent<ParticleSystem>().particleCount == 0)
+                            DustParticleSystem2.GetComponent<ParticleSystem>().Emit(8);
+                        //if (_blocks[i].GetComponent<Animator>() == null)
+                        //{
+                        //    _blocks[i].AddComponent<Animator>();
+                        //    Animator animator = _blocks[i].GetComponent<Animator>();
+                        //    animator.runtimeAnimatorController = (RuntimeAnimatorController)Resources.Load("Animations/block", typeof(RuntimeAnimatorController));
+
+                        //}
+                        //_blocks[i].GetComponent<Animator>().SetTrigger("show");
+                    }
                 }
                 else
                 {
@@ -113,14 +165,13 @@ public class Main : MonoBehaviour
             }
             else
             {
-                //Debug.Log("Null " + i+" "+ upperBoundIndex);
+                Debug.Log("Null " + i + " " + upperBoundIndex);
             }
         }
     }
-    private int upperBoundIndexToDisplay = 0;
     public void OnPrevButtonClicked()
     {
-        if (upperBoundIndexToDisplay < _blocks.Length - nullBlockCounter)
+        if (upperBoundIndexToDisplay < _blocks.Count)
         {
             upperBoundIndexToDisplay++;
             ShowBlocks(upperBoundIndexToDisplay);
@@ -136,21 +187,22 @@ public class Main : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        if (_blocks != null)
-        {
-            for (int i = 0; i < _blocks.Length - nullBlockCounter; i++)
-            {
-                if (_blocks[i] != null)
-                {
-                    if (_blocks[i].activeSelf)
-                    {
-                        var bound = _blocks[i].GetComponent<MeshRenderer>().bounds;
-                        Gizmos.DrawWireCube(bound.center, bound.size);
-                    }
-                }
-            }
+        /*Here the display the bounds of blocks*/
+        //if (_blocks != null)
+        //{
+        //    for (int i = 0; i < _blocks.Count; i++)
+        //    {
+        //        if (_blocks[i] != null)
+        //        {
+        //            if (_blocks[i].activeSelf)
+        //            {
+        //                var bound = _blocks[i].GetComponent<MeshRenderer>().bounds;
+        //                Gizmos.DrawWireCube(bound.center, bound.size);
+        //            }
+        //        }
+        //    }
 
-        }
+        //}
         //if(vectorField!=null)
     }
     // Update is called once per frame
@@ -165,7 +217,7 @@ public class Main : MonoBehaviour
 
         //deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
         float fps = 1.0f / Time.deltaTime;
-        UiFps.text = ((int)fps).ToString();
+        UiFpsText.text = ((int)fps).ToString();
 
         if (Input.GetMouseButtonUp(0))
         {
@@ -195,20 +247,20 @@ public class Main : MonoBehaviour
             //Destroy(pieces[1], 1);
         }
 
-        foreach (Boid boid in boids)
-        {
-            int index = GetIndexFromVectorField(boid.Pos);
-            if (index>0&&index < vectorFieldUi.Length)
-            {
-                if (vectorFieldUi[index] != null)
-                {
-                    boid.ApplyForce(boid.Steer(vectorFieldUi[index].transform.forward)*0.5f);
-                }
-            }
-            boid.Flock(boids);
-            boid.update();
-        }
-        CreateVectorFieldUi(boundSize.x * 2.0f, boundPos, vectorField);
+        //foreach (Boid boid in boids)
+        //{
+        //    int index = GetIndexFromVectorField(boid.Pos);
+        //    if (index>0&&index < vectorFieldUi.Length)
+        //    {
+        //        if (vectorFieldUi[index] != null)
+        //        {
+        //            boid.ApplyForce(boid.Steer(vectorFieldUi[index].transform.forward)*0.5f);
+        //        }
+        //    }
+        //    boid.Flock(boids);
+        //    boid.update();
+        //}
+        //CreateVectorFieldUi(boundSize.x * 2.0f, boundPos, vectorField);
     }
 
     public void CreateVectorFieldUi(float size, Vector3 position, Vector3[] vectorField)
@@ -311,6 +363,39 @@ public class Main : MonoBehaviour
             var plane = GameObject.CreatePrimitive(PrimitiveType.Cube);
             plane.transform.position = boundPos + new Vector3(-boundSize.x, 0, -boundSize.z); ;
             plane.transform.localScale = new Vector3(0.1f, boundSize.y * 2.0f, 0.1f);
+        }
+    }
+
+    private void SetUpBoidWorld()
+    {
+        boundPos = new Vector3(0, 3.5f, 0);
+        boundSize = new Vector3(3, 3, 3);
+        vectorFieldSize = 10;
+        vectorField = new Vector3[vectorFieldSize * vectorFieldSize * vectorFieldSize];
+        vectorFieldUi = new GameObject[vectorFieldSize * vectorFieldSize * vectorFieldSize];
+
+        //DisplayBound();
+
+        for (int i = 0; i < 20; i++)
+        {
+
+            Vector3 boidPos = new Vector3(
+                Random.Range(-boundPos.x * 0.5f, boundPos.x * 0.5f),
+                Random.Range(-boundPos.y * 0.5f, boundPos.y * 0.5f),
+                Random.Range(-boundPos.z * 0.5f, boundPos.z * 0.5f));
+            Vector3 boidVel = new Vector3(
+                Random.Range(-0.05f, 0.05f),
+                Random.Range(-0.05f, 0.05f),
+                Random.Range(-0.05f, 0.05f));
+            Vector3 boidAcc = new Vector3(
+                Random.Range(-0.01f, 0.01f),
+                Random.Range(-0.01f, 0.01f),
+                Random.Range(-0.01f, 0.01f));
+            Vector3 boidRot = new Vector3(0, 0, 0);
+            Boid newBoid = Instantiate(boidTemplate, boidPos, Quaternion.Euler(boidRot));
+            newBoid.SetUp(boidPos, boidVel, boidVel);
+            newBoid.SetPercepts(boundPos, boundSize);
+            boids.Add(newBoid);
         }
     }
 }

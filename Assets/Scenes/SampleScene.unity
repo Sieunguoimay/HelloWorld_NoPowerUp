@@ -754,11 +754,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 632280339}
   m_CullTransparentMesh: 0
---- !u!1 &717433065 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1465694168443398776, guid: 09e6dfff2c5f533428de73bdd5e39d34, type: 3}
-  m_PrefabInstance: {fileID: 855542678}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &855542678
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1503,7 +1498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 1123125607}
-  cuttingTarget: {fileID: 717433065}
+  cuttingTarget: {fileID: 223974226}
   innerMaterial: {fileID: 2100000, guid: 88ed581b3c7be7346a4664ffed15bfe8, type: 2}
   per: 0
   UiPercentageSlider: {fileID: 414641443}
